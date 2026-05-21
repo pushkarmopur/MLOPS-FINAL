@@ -7,17 +7,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
       - name: Install dependencies
         run: pip install -r requirements.txt
-
-      - name: Validate syntax
-        run: python -m py_compile app/app.py app/train.py
+      - name: Run Unit Tests
+        env:
+          PYTHONPATH: .
+        run: pytest tests/test_api.py
