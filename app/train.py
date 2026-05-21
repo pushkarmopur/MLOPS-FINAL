@@ -1,5 +1,6 @@
 import pandas as pd
 import pickle
+import os
 import mlflow
 import mlflow.sklearn
 
@@ -23,19 +24,12 @@ def train_model():
     y = data['quality']
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=0.2,
-        random_state=42
+        X, y, test_size=0.2, random_state=42
     )
 
     pipeline = Pipeline([
         ('scaler', StandardScaler()),
-        ('rf', RandomForestClassifier(
-            n_estimators=100,
-            max_depth=10,
-            random_state=42
-        ))
+        ('rf', RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42))
     ])
 
     mlflow.set_experiment("Wine_Quality_Assessment")
@@ -44,20 +38,35 @@ def train_model():
         print("Training pipeline...")
 
         pipeline.fit(X_train, y_train)
-
         predictions = pipeline.predict(X_test)
+
         new_accuracy = accuracy_score(y_test, predictions)
 
         mlflow.log_metric("accuracy", new_accuracy)
         mlflow.sklearn.log_model(pipeline, "model")
 
-        ACCURACY_THRESHOLD = 0.75
+        THRESHOLD_FILE = 'best_accuracy.txt'
 
-        if new_accuracy >= ACCURACY_THRESHOLD:
-            print("Model meets threshold. Saving model.pkl!")
+        if os.path.exists(THRESHOLD_FILE):
+            with open(THRESHOLD_FILE, 'r') as f:
+                historical_best = float(f.read().strip())
+        else:
+            historical_best = 0.75
+
+        print("\n--- CHAMPION VS CHALLENGER ---")
+        print(f"Current: {new_accuracy}")
+        print(f"Best: {historical_best}")
+
+        if new_accuracy > historical_best:
+            print("New best model!")
 
             with open('model.pkl', 'wb') as f:
                 pickle.dump(pipeline, f)
+
+            with open(THRESHOLD_FILE, 'w') as f:
+                f.write(str(new_accuracy))
+        else:
+            print("Model not better than previous best. Skipping save.")
 
 
 if __name__ == "__main__":
