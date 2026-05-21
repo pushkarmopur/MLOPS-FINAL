@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results</title>
+</head>
+<body>
+
+    <h1>Prediction Result</h1>
+
+    <h2>
+        {% if prediction %}
+            {{ prediction }}
+        {% else %}
+            Error: No prediction received.
+        {% endif %}
+    </h2>
+
+    <a href="/">Go back</a>
+
+</body>
+</html>
